@@ -32,7 +32,8 @@ var heightFont
 var stringValue = "Hello World!"
 
 #ball variable
-onready var ballPosition = Vector2(halfScreenWidth, halfScreenHeight)
+onready var startingBallPosition = Vector2(halfScreenWidth, halfScreenHeight)
+onready var ballPosition = startingBallPosition
 
 #player paddle
 onready var playerPosition = Vector2(paddlePadding, halfScreenHeight - halfPaddleHeight)
@@ -49,6 +50,10 @@ var stringPosition
 const RESET_DELTA_KEY = 0.0
 const MAX_KEY_TIME = 0.3
 var deltaKeyPress = RESET_DELTA_KEY
+
+#ball speed
+var startingSpeed = Vector2(400.0,0.0)
+var ballSpeed = startingSpeed
 
 func _ready() -> void:
 	print(get_tree().get_root().size)
@@ -68,16 +73,39 @@ func _physics_process(delta: float) -> void:
 				deltaKeyPress = RESET_DELTA_KEY
 			update()
 		GAME_STATE.SERVE:
+			ballPosition = startingBallPosition
 			changeString("Serve!")
+			
+			if isPlayerServe:
+				ballSpeed = startingSpeed
+				changeString("Player's Serve")
+			else:
+				ballSpeed = -startingSpeed
+				changeString("AI's Serve")
+				
 			if (Input.is_key_pressed(KEY_SPACE) and deltaKeyPress > MAX_KEY_TIME):
-				currentGameState = GAME_STATE.MENU
+				currentGameState = GAME_STATE.PLAY
 				deltaKeyPress = RESET_DELTA_KEY
 			update()
+			
 		GAME_STATE.PLAY:
 			changeString("Play")
 			if (Input.is_key_pressed(KEY_SPACE) and deltaKeyPress > MAX_KEY_TIME):
-				currentGameState = GAME_STATE.MENU
+				currentGameState = GAME_STATE.SERVE
 				deltaKeyPress = RESET_DELTA_KEY
+			
+			ballPosition += ballSpeed * delta
+			if ballPosition.x <= 0:
+				currentGameState = GAME_STATE.SERVE
+				deltaKeyPress = RESET_DELTA_KEY
+				isPlayerServe = true
+			
+			if ballPosition.x >= screenWidth:
+				currentGameState = GAME_STATE.SERVE
+				deltaKeyPress = RESET_DELTA_KEY
+				isPlayerServe = false
+			
+			
 			update()
 
 func _draw() -> void:
